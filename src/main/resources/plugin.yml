@@ -14,5 +14,14 @@ commands:
     description: Selecciona un trabajo
     usage: /work
   jobstats:
-    description: Muestra información de tu trabajo y tu balance
+    description: Muestra información de tu trabajo y balance
     usage: /jobstats
+  jobs:
+    description: Lista tus trabajos actuales
+    usage: /jobs
+  removejob:
+    description: Quita un trabajo que tengas
+    usage: /removejob <trabajo>
+  jobinfo:
+    description: Muestra información de cada trabajo
+    usage: /jobinfo

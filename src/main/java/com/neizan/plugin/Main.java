@@ -1,9 +1,6 @@
 package com.neizan.plugin;
 
-import com.neizan.plugin.commands.BalanceCommand;
-import com.neizan.plugin.commands.JobStatsCommand;
-import com.neizan.plugin.commands.PayCommand;
-import com.neizan.plugin.commands.WorkCommand;
+import com.neizan.plugin.commands.*;
 import com.neizan.plugin.economy.EconomyManager;
 import com.neizan.plugin.events.*;
 import com.neizan.plugin.jobs.JobManager;
@@ -29,6 +26,9 @@ public class Main extends JavaPlugin {
         this.getCommand("pay").setExecutor(new PayCommand());
         this.getCommand("work").setExecutor(new WorkCommand(jobManager));
         this.getCommand("jobstats").setExecutor(new JobStatsCommand());
+        this.getCommand("jobs").setExecutor(new JobsCommand(jobManager));
+        this.getCommand("removejob").setExecutor(new RemoveJobCommand(jobManager));
+        this.getCommand("jobinfo").setExecutor(new JobInfoCommand(jobManager));
 
         // Registrar listeners
         getServer().getPluginManager().registerEvents(new WorkClickListener(jobManager), this);

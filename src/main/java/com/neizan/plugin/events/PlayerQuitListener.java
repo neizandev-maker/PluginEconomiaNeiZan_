@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 public class PlayerQuitListener implements Listener {
@@ -21,7 +22,6 @@ public class PlayerQuitListener implements Listener {
     private final File playerDataFile;
     private final FileConfiguration playerDataConfig;
 
-    // ✅ Recibir JobManager en el constructor
     public PlayerQuitListener(JobManager jobManager) {
         this.jobManager = jobManager;
         this.plugin = Main.getInstance();
@@ -47,11 +47,14 @@ public class PlayerQuitListener implements Listener {
         double balance = plugin.getEconomyManager().getBalance(uuid);
         playerDataConfig.set(uuid + ".balance", balance);
 
-        // Guardar trabajo
+        // Guardar hasta 3 trabajos
         if (jobManager.hasJob(uuid)) {
-            Job job = jobManager.getJob(uuid);
-            playerDataConfig.set(uuid + ".job", job.getJobType().name());
-            playerDataConfig.set(uuid + ".jobBalance", job.getBalance());
+            List<Job> playerJobs = jobManager.getJobs(uuid);
+            for (int i = 0; i < playerJobs.size(); i++) {
+                Job job = playerJobs.get(i);
+                playerDataConfig.set(uuid + ".job" + i + ".type", job.getJobType().name());
+                playerDataConfig.set(uuid + ".job" + i + ".balance", job.getBalance());
+            }
         }
 
         // Guardar archivo

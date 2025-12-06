@@ -1,12 +1,16 @@
 package com.neizan.plugin.events;
 
 import com.neizan.plugin.Main;
+import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import com.neizan.plugin.jobs.JobsEnum;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+
+import java.util.List;
+import java.util.UUID;
 
 public class JobEntityKillListener implements Listener {
 
@@ -19,16 +23,19 @@ public class JobEntityKillListener implements Listener {
     @EventHandler
     public void onEntityKill(EntityDeathEvent event) {
         Player killer = event.getEntity().getKiller();
-        if (killer == null) return; // Si no hay jugador que mató, salir
-        if (!jobManager.hasJob(killer.getUniqueId())) return;
+        if (killer == null) return;
+        UUID uuid = killer.getUniqueId();
 
-        JobsEnum job = jobManager.getJob(killer.getUniqueId()).getJobType();
+        if (!jobManager.hasJob(uuid)) return;
 
-        if (job == JobsEnum.ASESINO) {
-            double reward = 10.0; // recompensa ejemplo
-            jobManager.getJob(killer.getUniqueId()).addBalance(reward);
-            Main.getInstance().getEconomyManager().addBalance(killer.getUniqueId(), reward);
-            killer.sendMessage("Has ganado $" + reward + " por tu trabajo de " + job.getNombre());
+        List<Job> playerJobs = jobManager.getJobs(uuid);
+        for (Job job : playerJobs) {
+            if (job.getJobType() == JobsEnum.ASESINO) {
+                double reward = 10.0;
+                job.addBalance(reward);
+                Main.getInstance().getEconomyManager().addBalance(uuid, reward);
+                killer.sendMessage("Has ganado $" + reward + " por tu trabajo de " + job.getJobType().getNombre());
+            }
         }
     }
 }

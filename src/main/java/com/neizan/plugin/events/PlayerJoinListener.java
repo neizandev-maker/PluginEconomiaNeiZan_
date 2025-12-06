@@ -44,24 +44,24 @@ public class PlayerJoinListener implements Listener {
         UUID uuid = player.getUniqueId();
 
         // Registrar jugador en economía si no existe
-        if (!plugin.getEconomyManager().hasPlayer(uuid)) {
-            plugin.getEconomyManager().registerPlayer(uuid);
-        }
+        plugin.getEconomyManager().registerPlayer(uuid);
 
         // Cargar datos si existen
         if (playerDataConfig.contains(uuid.toString())) {
             double balance = playerDataConfig.getDouble(uuid + ".balance");
             plugin.getEconomyManager().setBalance(uuid, balance);
 
-            if (playerDataConfig.contains(uuid + ".job")) {
-                String jobName = playerDataConfig.getString(uuid + ".job");
-                double jobBalance = playerDataConfig.getDouble(uuid + ".jobBalance");
+            // Cargar hasta 3 trabajos
+            for (int i = 0; i < 3; i++) {
+                if (playerDataConfig.contains(uuid + ".job" + i + ".type")) {
+                    String jobName = playerDataConfig.getString(uuid + ".job" + i + ".type");
+                    double jobBalance = playerDataConfig.getDouble(uuid + ".job" + i + ".balance");
 
-                JobsEnum jobEnum = JobsEnum.valueOf(jobName);
-                Job job = new Job(uuid, jobEnum);
-                job.setBalance(jobBalance);
-
-                jobManager.setJob(uuid, job);
+                    JobsEnum jobEnum = JobsEnum.valueOf(jobName);
+                    jobManager.addJob(uuid, jobEnum);
+                    Job job = jobManager.getJob(uuid, jobEnum);
+                    job.setBalance(jobBalance);
+                }
             }
         }
     }

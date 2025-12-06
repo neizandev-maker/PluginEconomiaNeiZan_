@@ -8,6 +8,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
 import java.util.UUID;
 
 public class JobStatsCommand implements CommandExecutor {
@@ -20,19 +21,20 @@ public class JobStatsCommand implements CommandExecutor {
         }
 
         UUID uuid = player.getUniqueId();
-        Job job = Main.getInstance().getJobManager().getJob(uuid);
+        List<Job> jobs = Main.getInstance().getJobManager().getJobs(uuid);
 
-        if (job == null) {
+        if (jobs.isEmpty()) {
             player.sendMessage(ChatColor.RED + "No tienes ningún trabajo asignado.");
             return true;
         }
 
-        double jobBalance = job.getBalance();
         double totalBalance = Main.getInstance().getEconomyManager().getBalance(uuid);
 
         player.sendMessage(ChatColor.GOLD + "===== Tus Stats =====");
-        player.sendMessage(ChatColor.AQUA + "Trabajo actual: " + ChatColor.GREEN + job.getJobType().getNombre());
-        player.sendMessage(ChatColor.AQUA + "Dinero ganado en este trabajo: " + ChatColor.GREEN + "$" + jobBalance);
+        for (Job job : jobs) {
+            player.sendMessage(ChatColor.AQUA + "Trabajo: " + ChatColor.GREEN + job.getJobType().getNombre());
+            player.sendMessage(ChatColor.AQUA + "Dinero ganado en este trabajo: " + ChatColor.GREEN + "$" + job.getBalance());
+        }
         player.sendMessage(ChatColor.AQUA + "Balance total: " + ChatColor.GREEN + "$" + totalBalance);
 
         return true;
