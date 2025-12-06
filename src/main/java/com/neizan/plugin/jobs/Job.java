@@ -3,16 +3,20 @@ package com.neizan.plugin.jobs;
 import java.util.UUID;
 
 public class Job {
+
     private final UUID playerUUID;
     private final JobsEnum jobType;
-    private double balance; // dinero ganado en este trabajo
-    private int level;      // nivel del trabajo
-    private double xp;      // experiencia acumulada
+    private double balance;
+    private int level;
+    private double xp;
+
+    // Base de XP para subir de nivel 1 → puedes ajustarla según el trabajo
+    private final double baseXp = 10.0;
 
     public Job(UUID playerUUID, JobsEnum jobType) {
         this.playerUUID = playerUUID;
         this.jobType = jobType;
-        this.balance = 0.0;
+        this.balance = 0;
         this.level = 1;
         this.xp = 0;
     }
@@ -29,13 +33,8 @@ public class Job {
         return balance;
     }
 
-    public void setBalance(double balance) {
-        this.balance = balance;
-    }
-
-
     public void addBalance(double amount) {
-        balance += amount;
+        this.balance += amount * (1 + 0.05 * (level - 1)); // bonus por nivel
     }
 
     public int getLevel() {
@@ -47,26 +46,28 @@ public class Job {
     }
 
     public void addXp(double amount) {
-        xp += amount;
-        // Subida de nivel
-        while (xp >= xpToNextLevel()) {
+        this.xp += amount;
+        // Si alcanza XP necesaria, subir nivel
+        while (xp >= xpToNextLevel() && level < 100) {
             xp -= xpToNextLevel();
             level++;
-            if (level > 100) { // nivel máximo
-                level = 100;
-                xp = 0;
-                break;
-            }
         }
     }
 
-    // Experiencia necesaria para el siguiente nivel (curva progresiva)
+    // XP necesario para subir de nivel
     public double xpToNextLevel() {
-        return 50 + (level - 1) * 20; // ejemplo: aumenta 20 XP por nivel
+        return baseXp * Math.pow(1.1, level - 1); // sube cada vez más
     }
 
-    // Multiplicador de dinero según nivel
-    public double getMultiplier() {
-        return 1.0 + (level - 1) * 0.05; // 5% más por nivel
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public void setXp(double xp) {
+        this.xp = xp;
     }
 }

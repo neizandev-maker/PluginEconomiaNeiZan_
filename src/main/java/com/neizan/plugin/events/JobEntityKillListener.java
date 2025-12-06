@@ -9,9 +9,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 
-import java.util.List;
-import java.util.UUID;
-
 public class JobEntityKillListener implements Listener {
 
     private final JobManager jobManager;
@@ -24,17 +21,26 @@ public class JobEntityKillListener implements Listener {
     public void onEntityKill(EntityDeathEvent event) {
         Player killer = event.getEntity().getKiller();
         if (killer == null) return;
-        UUID uuid = killer.getUniqueId();
 
-        if (!jobManager.hasJob(uuid)) return;
+        if (!jobManager.hasJob(killer.getUniqueId())) return;
 
-        List<Job> playerJobs = jobManager.getJobs(uuid);
-        for (Job job : playerJobs) {
-            if (job.getJobType() == JobsEnum.ASESINO) {
-                double reward = 10.0;
+        for (Job job : jobManager.getJobs(killer.getUniqueId())) {
+            JobsEnum jobType = job.getJobType();
+            double reward = 0;
+            double xpGain = 0;
+
+            if (jobType == JobsEnum.ASESINO) {
+                reward = 10.0;
+                xpGain = 8.0;
+            }
+
+            if (reward > 0) {
                 job.addBalance(reward);
-                Main.getInstance().getEconomyManager().addBalance(uuid, reward);
-                killer.sendMessage("Has ganado $" + reward + " por tu trabajo de " + job.getJobType().getNombre());
+                Main.getInstance().getEconomyManager().addBalance(killer.getUniqueId(), reward);
+
+                job.addXp(xpGain);
+
+                killer.sendMessage("Has ganado $" + reward + " y " + xpGain + " XP en tu trabajo de " + jobType.getNombre());
             }
         }
     }

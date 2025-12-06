@@ -3,12 +3,12 @@ package com.neizan.plugin.events;
 import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,14 +26,10 @@ public class PlayerQuitListener implements Listener {
         this.jobManager = jobManager;
         this.plugin = Main.getInstance();
 
-        // Crear archivo players.yml si no existe
         playerDataFile = new File(plugin.getDataFolder(), "players.yml");
         if (!playerDataFile.exists()) {
-            try {
-                playerDataFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            try { playerDataFile.createNewFile(); }
+            catch (IOException e) { e.printStackTrace(); }
         }
         playerDataConfig = YamlConfiguration.loadConfiguration(playerDataFile);
     }
@@ -47,21 +43,17 @@ public class PlayerQuitListener implements Listener {
         double balance = plugin.getEconomyManager().getBalance(uuid);
         playerDataConfig.set(uuid + ".balance", balance);
 
-        // Guardar hasta 3 trabajos
-        if (jobManager.hasJob(uuid)) {
-            List<Job> playerJobs = jobManager.getJobs(uuid);
-            for (int i = 0; i < playerJobs.size(); i++) {
-                Job job = playerJobs.get(i);
-                playerDataConfig.set(uuid + ".job" + i + ".type", job.getJobType().name());
-                playerDataConfig.set(uuid + ".job" + i + ".balance", job.getBalance());
-            }
+        // Guardar trabajos
+        List<Job> playerJobs = jobManager.getJobs(uuid);
+        for (int i = 0; i < playerJobs.size(); i++) {
+            Job job = playerJobs.get(i);
+            playerDataConfig.set(uuid + ".job" + i + ".type", job.getJobType().name());
+            playerDataConfig.set(uuid + ".job" + i + ".balance", job.getBalance());
+            playerDataConfig.set(uuid + ".job" + i + ".xp", job.getXp());
+            playerDataConfig.set(uuid + ".job" + i + ".level", job.getLevel());
         }
 
-        // Guardar archivo
-        try {
-            playerDataConfig.save(playerDataFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try { playerDataConfig.save(playerDataFile); }
+        catch (IOException e) { e.printStackTrace(); }
     }
 }
