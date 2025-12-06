@@ -24,27 +24,23 @@ public class JobHarvestListener implements Listener {
         Player player = event.getPlayer();
         if (!jobManager.hasJob(player.getUniqueId())) return;
 
-        for (Job job : jobManager.getJobs(player.getUniqueId())) {
-            JobsEnum jobType = job.getJobType();
-            if (jobType != JobsEnum.GRANJERO) continue;
+        Block block = event.getBlock();
 
-            Block block = event.getBlock();
+        for (Job job : jobManager.getJobs(player.getUniqueId())) {
+            if (job.getJobType() != JobsEnum.GRANJERO) continue;
+
             double reward = 0;
             double xpGain = 0;
-
             if (block.getType() == Material.WHEAT || block.getType() == Material.CARROTS ||
                     block.getType() == Material.POTATOES || block.getType() == Material.BEETROOTS) {
-                reward = 2.0;
-                xpGain = 3.0;
+                reward = job.getJobType().getBaseReward();
+                xpGain = job.getJobType().getBaseXp() / 2;
             }
 
             if (reward > 0) {
                 job.addBalance(reward);
-                Main.getInstance().getEconomyManager().addBalance(player.getUniqueId(), reward);
-
                 job.addXp(xpGain);
-
-                player.sendMessage("Has ganado $" + reward + " y " + xpGain + " XP por cosechar como " + jobType.getNombre());
+                Main.getInstance().getEconomyManager().addBalance(player.getUniqueId(), reward);
             }
         }
     }

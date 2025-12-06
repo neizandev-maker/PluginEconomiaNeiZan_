@@ -22,21 +22,15 @@ public class JobFishingListener implements Listener {
         Player player = event.getPlayer();
         if (!jobManager.hasJob(player.getUniqueId())) return;
 
-        if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH) return;
-
         for (Job job : jobManager.getJobs(player.getUniqueId())) {
-            JobsEnum jobType = job.getJobType();
-            if (jobType != JobsEnum.PESCADOR) continue;
-
-            double reward = 3.0;
-            double xpGain = 2.0;
-
-            job.addBalance(reward);
-            Main.getInstance().getEconomyManager().addBalance(player.getUniqueId(), reward);
-
-            job.addXp(xpGain);
-
-            player.sendMessage("Has ganado $" + reward + " y " + xpGain + " XP por pescar como " + jobType.getNombre());
+            if (job.getJobType() != JobsEnum.PESCADOR) continue;
+            if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
+                double reward = job.getJobType().getBaseReward();
+                double xpGain = job.getJobType().getBaseXp();
+                job.addBalance(reward);
+                job.addXp(xpGain);
+                Main.getInstance().getEconomyManager().addBalance(player.getUniqueId(), reward);
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import com.neizan.plugin.jobs.JobsEnum;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,7 +12,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class WorkClickListener implements Listener {
@@ -38,32 +41,38 @@ public class WorkClickListener implements Listener {
             JobsEnum job = JobsEnum.fromItem(clicked.getType());
             if (job == null) return;
 
-            // Submenú
-            Inventory inv = Main.getInstance().getServer().createInventory(null, 27, "§6Detalles de " + job.getNombre());
-            // Descripción y stats
+            Inventory inv = Bukkit.createInventory(null, 27, "§6Detalles de " + job.getNombre());
+
+            // Info del trabajo
             ItemStack info = new ItemStack(job.getIcon());
-            var meta = info.getItemMeta();
+            ItemMeta meta = info.getItemMeta();
             meta.setDisplayName("§a" + job.getNombre());
+
             Job j = jobManager.getJob(player.getUniqueId(), job);
-            int level = j != null ? j.getLevel() : 0;
-            meta.setLore(List.of(
-                    "§7" + job.getDescripcion(),
-                    "§7Nivel: " + level,
-                    "§7XP: " + (j != null ? j.getXp() : 0) + "/" + (j != null ? j.xpToNextLevel() : job.getBaseXp())
-            ));
+            int level = j != null ? j.getLevel() : 1;
+            double xp = j != null ? j.getXp() : 0;
+            double xpToNext = j != null ? j.getXpToNextLevel() : job.getBaseXp();
+
+            List<String> lore = new ArrayList<>();
+            lore.add("§7" + job.getDescripcion());
+            lore.add("§7Nivel: §e" + level);
+            lore.add("§7XP: " + buildXpBar(xp, xpToNext) + " §f(" + (int) xp + "/" + (int) xpToNext + ")");
+            lore.add("§7Recompensas: " + job.getRewardDescription());
+
+            meta.setLore(lore);
             info.setItemMeta(meta);
             inv.setItem(13, info);
 
-            // Botones aceptar/rechazar
+            // Botones
             ItemStack accept = new ItemStack(Material.GREEN_WOOL);
-            var ameta = accept.getItemMeta();
-            ameta.setDisplayName("§aAceptar trabajo");
-            accept.setItemMeta(ameta);
+            ItemMeta am = accept.getItemMeta();
+            am.setDisplayName("§aAceptar trabajo");
+            accept.setItemMeta(am);
 
             ItemStack decline = new ItemStack(Material.RED_WOOL);
-            var dmeta = decline.getItemMeta();
-            dmeta.setDisplayName("§cRechazar trabajo");
-            decline.setItemMeta(dmeta);
+            ItemMeta dm = decline.getItemMeta();
+            dm.setDisplayName("§cRechazar trabajo");
+            decline.setItemMeta(dm);
 
             inv.setItem(11, accept);
             inv.setItem(15, decline);
@@ -76,11 +85,22 @@ public class WorkClickListener implements Listener {
             if (clicked.getType() == Material.GREEN_WOOL) {
                 JobsEnum job = JobsEnum.fromName(title.replace("§6Detalles de ", ""));
                 jobManager.addJob(player.getUniqueId(), job);
-                player.sendMessage("Has aceptado el trabajo: " + job.getNombre());
+                player.sendMessage("§aHas aceptado el trabajo: " + job.getNombre());
                 player.closeInventory();
             } else if (clicked.getType() == Material.RED_WOOL) {
                 player.closeInventory();
             }
         }
+    }
+
+    private String buildXpBar(double xp, double max) {
+        int totalBlocks = 20;
+        int filled = (int) ((xp / max) * totalBlocks);
+        StringBuilder bar = new StringBuilder();
+        for (int i = 0; i < totalBlocks; i++) {
+            if (i < filled) bar.append("§a▓");
+            else bar.append("§7░");
+        }
+        return bar.toString();
     }
 }

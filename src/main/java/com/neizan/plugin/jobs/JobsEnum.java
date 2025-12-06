@@ -44,4 +44,18 @@ public enum JobsEnum {
         }
         return null;
     }
+
+    // ------------------------------
+    // NUEVO MÉTODO
+    // ------------------------------
+    public String getRewardDescription() {
+        switch (this) {
+            case EXCAVADOR: return "$" + baseReward + " por DIRT, SAND o GRAVEL";
+            case MINERO: return "$" + baseReward + " por ORES";
+            case ASESINO: return "$" + baseReward + " por mobs hostiles";
+            case GRANJERO: return "$" + baseReward + " por cosechar cultivos";
+            case PESCADOR: return "$" + baseReward + " por pescar peces";
+            default: return "$" + baseReward + " por acción";
+        }
+    }
 }

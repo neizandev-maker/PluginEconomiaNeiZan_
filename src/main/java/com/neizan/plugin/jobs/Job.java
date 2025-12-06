@@ -4,25 +4,18 @@ import java.util.UUID;
 
 public class Job {
 
-    private final UUID playerUUID;
+    private final UUID playerUuid;
     private final JobsEnum jobType;
     private double balance;
-    private int level;
     private double xp;
+    private int level;
 
-    // Base de XP para subir de nivel 1 → puedes ajustarla según el trabajo
-    private final double baseXp = 10.0;
-
-    public Job(UUID playerUUID, JobsEnum jobType) {
-        this.playerUUID = playerUUID;
+    public Job(UUID playerUuid, JobsEnum jobType) {
+        this.playerUuid = playerUuid;
         this.jobType = jobType;
         this.balance = 0;
-        this.level = 1;
         this.xp = 0;
-    }
-
-    public UUID getPlayerUUID() {
-        return playerUUID;
+        this.level = 1;
     }
 
     public JobsEnum getJobType() {
@@ -34,40 +27,52 @@ public class Job {
     }
 
     public void addBalance(double amount) {
-        this.balance += amount * (1 + 0.05 * (level - 1)); // bonus por nivel
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public double getXp() {
-        return xp;
-    }
-
-    public void addXp(double amount) {
-        this.xp += amount;
-        // Si alcanza XP necesaria, subir nivel
-        while (xp >= xpToNextLevel() && level < 100) {
-            xp -= xpToNextLevel();
-            level++;
-        }
-    }
-
-    // XP necesario para subir de nivel
-    public double xpToNextLevel() {
-        return baseXp * Math.pow(1.1, level - 1); // sube cada vez más
+        balance += amount * applyLevelMultiplier();
     }
 
     public void setBalance(double balance) {
         this.balance = balance;
     }
 
+    public double getXp() {
+        return xp;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    // -----------------------------
+    // NUEVOS MÉTODOS PARA LOAD
+    // -----------------------------
+    public void setXp(double xp) {
+        this.xp = xp;
+    }
+
     public void setLevel(int level) {
         this.level = level;
     }
 
-    public void setXp(double xp) {
-        this.xp = xp;
+    // -----------------------------
+    // Funciones de niveles y XP
+    // -----------------------------
+    public void addXp(double amount) {
+        xp += amount;
+        checkLevelUp();
+    }
+
+    public void checkLevelUp() {
+        while (xp >= getXpToNextLevel() && level < 100) {
+            xp -= getXpToNextLevel();
+            level++;
+        }
+    }
+
+    public double getXpToNextLevel() {
+        return jobType.getBaseXp() * Math.pow(1.1, level - 1);
+    }
+
+    public double applyLevelMultiplier() {
+        return 1 + (level - 1) * 0.05; // +5% por nivel
     }
 }

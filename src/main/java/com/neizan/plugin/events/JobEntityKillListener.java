@@ -21,26 +21,15 @@ public class JobEntityKillListener implements Listener {
     public void onEntityKill(EntityDeathEvent event) {
         Player killer = event.getEntity().getKiller();
         if (killer == null) return;
-
         if (!jobManager.hasJob(killer.getUniqueId())) return;
 
         for (Job job : jobManager.getJobs(killer.getUniqueId())) {
-            JobsEnum jobType = job.getJobType();
-            double reward = 0;
-            double xpGain = 0;
-
-            if (jobType == JobsEnum.ASESINO) {
-                reward = 10.0;
-                xpGain = 8.0;
-            }
-
-            if (reward > 0) {
+            if (job.getJobType() == JobsEnum.ASESINO) {
+                double reward = job.getJobType().getBaseReward();
+                double xpGain = job.getJobType().getBaseXp();
                 job.addBalance(reward);
-                Main.getInstance().getEconomyManager().addBalance(killer.getUniqueId(), reward);
-
                 job.addXp(xpGain);
-
-                killer.sendMessage("Has ganado $" + reward + " y " + xpGain + " XP en tu trabajo de " + jobType.getNombre());
+                Main.getInstance().getEconomyManager().addBalance(killer.getUniqueId(), reward);
             }
         }
     }

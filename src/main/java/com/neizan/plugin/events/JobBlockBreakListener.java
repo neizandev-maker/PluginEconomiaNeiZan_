@@ -24,39 +24,31 @@ public class JobBlockBreakListener implements Listener {
         Player player = event.getPlayer();
         if (!jobManager.hasJob(player.getUniqueId())) return;
 
-        // Iterar por todos los trabajos del jugador
         for (Job job : jobManager.getJobs(player.getUniqueId())) {
-            JobsEnum jobType = job.getJobType();
+            JobsEnum type = job.getJobType();
             double reward = 0;
             double xpGain = 0;
 
             Block block = event.getBlock();
-            switch (jobType) {
+            switch (type) {
                 case EXCAVADOR:
-                    if (block.getType() == Material.DIRT ||
-                            block.getType() == Material.SAND ||
-                            block.getType() == Material.GRAVEL) {
-                        reward = 1.0;
-                        xpGain = 2.0;
+                    if (block.getType() == Material.DIRT || block.getType() == Material.SAND || block.getType() == Material.GRAVEL) {
+                        reward = type.getBaseReward();
+                        xpGain = type.getBaseXp() / 2;
                     }
                     break;
                 case MINERO:
                     if (block.getType().name().contains("ORE")) {
-                        reward = 5.0;
-                        xpGain = 5.0;
+                        reward = type.getBaseReward();
+                        xpGain = type.getBaseXp() / 2;
                     }
                     break;
             }
 
             if (reward > 0) {
-                // Añadir dinero con bonus de nivel
                 job.addBalance(reward);
-                Main.getInstance().getEconomyManager().addBalance(player.getUniqueId(), reward);
-
-                // Añadir XP y subir de nivel si corresponde
                 job.addXp(xpGain);
-
-                player.sendMessage("Has ganado $" + reward + " y " + xpGain + " XP en tu trabajo de " + jobType.getNombre());
+                Main.getInstance().getEconomyManager().addBalance(player.getUniqueId(), reward);
             }
         }
     }
