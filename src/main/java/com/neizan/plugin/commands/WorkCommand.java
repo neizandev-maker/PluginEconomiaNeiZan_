@@ -25,34 +25,28 @@ public class WorkCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("Este comando solo puede ser usado por jugadores.");
+            sender.sendMessage("Este comando solo puede usarlo un jugador.");
             return true;
         }
 
-        // Inventario de 27 slots (3 filas) para centrar los trabajos
         Inventory inv = Bukkit.createInventory(null, 27, "§6Selecciona un trabajo");
 
-        // Slots centrales donde pondremos los trabajos (segunda fila)
         int[] slots = {11, 12, 13, 14, 15};
-
         JobsEnum[] jobs = JobsEnum.values();
+
         for (int i = 0; i < jobs.length; i++) {
             JobsEnum job = jobs[i];
-
-            ItemStack item = switch (job) {
-                case EXCAVADOR -> new ItemStack(Material.DIAMOND_SHOVEL);
-                case MINERO -> new ItemStack(Material.DIAMOND_PICKAXE);
-                case ASESINO -> new ItemStack(Material.DIAMOND_SWORD);
-                case GRANJERO -> new ItemStack(Material.WHEAT);
-                case PESCADOR -> new ItemStack(Material.FISHING_ROD);
-            };
+            ItemStack item = job.getIcon(); // cada job define su icono
 
             ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName("§a" + job.getNombre()); // Nombre en verde
-            meta.setLore(Arrays.asList("§7" + job.getDescripcion())); // Lore en gris
+            meta.setDisplayName("§a" + job.getNombre());
+            meta.setLore(Arrays.asList(
+                    "§7" + job.getDescripcion(),
+                    "§7Recompensa base: $" + job.getBaseReward()
+            ));
             item.setItemMeta(meta);
 
-            inv.setItem(slots[i], item); // Colocar en slot central
+            inv.setItem(slots[i], item);
         }
 
         player.openInventory(inv);
