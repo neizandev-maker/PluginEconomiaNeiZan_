@@ -4,14 +4,12 @@ import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import com.neizan.plugin.jobs.JobsEnum;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 
-import java.util.UUID;
+import java.util.List;
 
 public class JobBlockBreakListener implements Listener {
 
@@ -26,33 +24,29 @@ public class JobBlockBreakListener implements Listener {
         Player player = event.getPlayer();
         String playerName = player.getName();
 
-        if (!jobManager.hasJob(playerName)) return;
+        List<Job> jobs = jobManager.getJobs(playerName);
+        if (jobs.isEmpty()) return;
 
-        for (Job job : jobManager.getJobs(playerName)) {
-            JobsEnum type = job.getJobType();
-            double reward = 0;
-            double xpGain = 0;
+        for (Job job : jobs) {
+            if (job.getJobType() == JobsEnum.EXCAVADOR) {
+                double reward = job.getJobType().getBaseReward();
+                double xpGain = job.getJobType().getBaseXp();
+                int oldLevel = job.getLevel();
 
-            Block block = event.getBlock();
-            switch (type) {
-                case EXCAVADOR:
-                    if (block.getType() == Material.DIRT || block.getType() == Material.SAND || block.getType() == Material.GRAVEL) {
-                        reward = type.getBaseReward();
-                        xpGain = type.getBaseXp() / 2;
-                    }
-                    break;
-                case MINERO:
-                    if (block.getType().name().contains("ORE")) {
-                        reward = type.getBaseReward();
-                        xpGain = type.getBaseXp() / 2;
-                    }
-                    break;
-            }
-
-            if (reward > 0) {
                 job.addBalance(reward);
                 job.addXp(xpGain);
-                Main.getInstance().getEconomyManager().addBalance(UUID.fromString(playerName), reward);
+
+                // Guardamos cambios del trabajo inmediatamente
+                jobManager.updateJob(job);
+
+                // Sumar dinero al balance general
+                Main.getInstance().getEconomyManager().addBalance(playerName, reward);
+
+                // Feedback al jugador
+                player.sendMessage("§aHas ganado $" + reward + " y " + xpGain + " XP como " + job.getJobType().getNombre());
+                if (job.getLevel() > oldLevel) {
+                    player.sendMessage("§6¡Has subido al nivel " + job.getLevel() + "!");
+                }
             }
         }
     }

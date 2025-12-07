@@ -44,7 +44,7 @@ public class PayCommand implements CommandExecutor {
         var economy = Main.getInstance().getEconomyManager();
 
         // Validación: suficiente dinero o OP
-        boolean hasMoney = economy.removeBalance(payer.getUniqueId(), amount);
+        boolean hasMoney = economy.removeBalance(payer.getName(), amount); // <- cambio aquí
         if (!hasMoney) {
             if (!payer.isOp()) {
                 payer.sendMessage("No tienes suficiente dinero.");
@@ -54,7 +54,7 @@ public class PayCommand implements CommandExecutor {
         }
 
         // Dar dinero al jugador destino
-        economy.addBalance(target.getUniqueId(), amount);
+        economy.addBalance(target.getName(), amount); // <- cambio aquí
 
         payer.sendMessage("Has enviado $" + amount + " a " + target.getName());
         target.sendMessage("Has recibido $" + amount + " de " + payer.getName());

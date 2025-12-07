@@ -4,14 +4,12 @@ import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import com.neizan.plugin.jobs.JobsEnum;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 
-import java.util.UUID;
+import java.util.List;
 
 public class JobHarvestListener implements Listener {
 
@@ -26,26 +24,25 @@ public class JobHarvestListener implements Listener {
         Player player = event.getPlayer();
         String playerName = player.getName();
 
-        if (!jobManager.hasJob(playerName)) return;
+        List<Job> jobs = jobManager.getJobs(playerName);
+        if (jobs.isEmpty()) return;
 
-        Block block = event.getBlock();
+        for (Job job : jobs) {
+            if (job.getJobType() == JobsEnum.GRANJERO) {
+                double reward = job.getJobType().getBaseReward();
+                double xpGain = job.getJobType().getBaseXp();
+                int oldLevel = job.getLevel();
 
-        for (Job job : jobManager.getJobs(playerName)) {
-            if (job.getJobType() != JobsEnum.GRANJERO) continue;
-
-            double reward = 0;
-            double xpGain = 0;
-
-            if (block.getType() == Material.WHEAT || block.getType() == Material.CARROTS ||
-                    block.getType() == Material.POTATOES || block.getType() == Material.BEETROOTS) {
-                reward = job.getJobType().getBaseReward();
-                xpGain = job.getJobType().getBaseXp() / 2;
-            }
-
-            if (reward > 0) {
                 job.addBalance(reward);
                 job.addXp(xpGain);
-                Main.getInstance().getEconomyManager().addBalance(UUID.fromString(playerName), reward);
+                jobManager.updateJob(job);
+
+                Main.getInstance().getEconomyManager().addBalance(playerName, reward);
+
+                player.sendMessage("§aHas ganado $" + reward + " y " + xpGain + " XP como " + job.getJobType().getNombre());
+                if (job.getLevel() > oldLevel) {
+                    player.sendMessage("§6¡Has subido al nivel " + job.getLevel() + "!");
+                }
             }
         }
     }

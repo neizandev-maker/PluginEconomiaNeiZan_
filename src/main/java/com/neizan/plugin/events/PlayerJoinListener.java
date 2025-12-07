@@ -18,10 +18,8 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        // Economía: seguimos usando UUID
-        economy.registerPlayer(event.getPlayer().getUniqueId());
-
-        // Jobs: usamos player_name
-        jobManager.getJobs(event.getPlayer().getName());
+        // Registramos al jugador usando SU NOMBRE
+        String playerName = event.getPlayer().getName();
+        economy.registerPlayer(playerName);
     }
 }

@@ -1,10 +1,12 @@
 package com.neizan.plugin.events;
 
+import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.entity.Player;
 
 public class PlayerQuitListener implements Listener {
 
@@ -15,10 +17,10 @@ public class PlayerQuitListener implements Listener {
     }
 
     @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        String playerName = event.getPlayer().getName();
-        for (Job job : jobManager.getJobs(playerName)) {
-            jobManager.saveJob(job);
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        for (Job job : jobManager.getJobs(player.getName())) {
+            jobManager.updateJob(job); // guarda XP, nivel y balance
         }
     }
 }

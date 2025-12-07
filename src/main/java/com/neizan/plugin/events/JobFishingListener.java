@@ -9,7 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 
-import java.util.UUID;
+import java.util.List;
 
 public class JobFishingListener implements Listener {
 
@@ -24,17 +24,25 @@ public class JobFishingListener implements Listener {
         Player player = event.getPlayer();
         String playerName = player.getName();
 
-        if (!jobManager.hasJob(playerName)) return;
+        List<Job> jobs = jobManager.getJobs(playerName);
+        if (jobs.isEmpty()) return;
 
-        for (Job job : jobManager.getJobs(playerName)) {
-            if (job.getJobType() != JobsEnum.PESCADOR) continue;
-
-            if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
+        for (Job job : jobs) {
+            if (job.getJobType() == JobsEnum.PESCADOR) {
                 double reward = job.getJobType().getBaseReward();
                 double xpGain = job.getJobType().getBaseXp();
+                int oldLevel = job.getLevel();
+
                 job.addBalance(reward);
                 job.addXp(xpGain);
-                Main.getInstance().getEconomyManager().addBalance(UUID.fromString(playerName), reward);
+                jobManager.updateJob(job);
+
+                Main.getInstance().getEconomyManager().addBalance(playerName, reward);
+
+                player.sendMessage("§aHas ganado $" + reward + " y " + xpGain + " XP como " + job.getJobType().getNombre());
+                if (job.getLevel() > oldLevel) {
+                    player.sendMessage("§6¡Has subido al nivel " + job.getLevel() + "!");
+                }
             }
         }
     }

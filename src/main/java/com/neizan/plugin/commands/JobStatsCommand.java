@@ -2,7 +2,6 @@ package com.neizan.plugin.commands;
 
 import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,22 +9,17 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
-import java.util.UUID;
 
 public class JobStatsCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Este comando solo puede usarse en el juego.");
             return true;
         }
 
         String playerName = player.getName();
-        UUID uuid = player.getUniqueId(); // Usamos UUID para EconomyManager
-
-        // Obtenemos los trabajos usando playerName (JobManager ya fue modificado a player_name)
         List<Job> jobs = Main.getInstance().getJobManager().getJobs(playerName);
 
         if (jobs.isEmpty()) {
@@ -33,8 +27,7 @@ public class JobStatsCommand implements CommandExecutor {
             return true;
         }
 
-        // Balance usando UUID (sin cambiar EconomyManager)
-        double totalBalance = Main.getInstance().getEconomyManager().getBalance(uuid);
+        double totalBalance = Main.getInstance().getEconomyManager().getBalance(playerName);
 
         player.sendMessage(ChatColor.GOLD + "===== Tus Stats =====");
 

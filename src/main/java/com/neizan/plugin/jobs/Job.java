@@ -72,6 +72,6 @@ public class Job {
     }
 
     public double applyLevelMultiplier() {
-        return 1 + (level - 1) * 0.05;
+        return 1 + (level - 1) * 0.05; // +5% por nivel
     }
 }

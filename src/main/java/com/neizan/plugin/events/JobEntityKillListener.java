@@ -9,7 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 
-import java.util.UUID;
+import java.util.List;
 
 public class JobEntityKillListener implements Listener {
 
@@ -25,15 +25,25 @@ public class JobEntityKillListener implements Listener {
         if (killer == null) return;
 
         String playerName = killer.getName();
-        if (!jobManager.hasJob(playerName)) return;
+        List<Job> jobs = jobManager.getJobs(playerName);
+        if (jobs.isEmpty()) return;
 
-        for (Job job : jobManager.getJobs(playerName)) {
+        for (Job job : jobs) {
             if (job.getJobType() == JobsEnum.ASESINO) {
                 double reward = job.getJobType().getBaseReward();
                 double xpGain = job.getJobType().getBaseXp();
+                int oldLevel = job.getLevel();
+
                 job.addBalance(reward);
                 job.addXp(xpGain);
-                Main.getInstance().getEconomyManager().addBalance(UUID.fromString(playerName), reward);
+                jobManager.updateJob(job);
+
+                Main.getInstance().getEconomyManager().addBalance(playerName, reward);
+
+                killer.sendMessage("§aHas ganado $" + reward + " y " + xpGain + " XP como " + job.getJobType().getNombre());
+                if (job.getLevel() > oldLevel) {
+                    killer.sendMessage("§6¡Has subido al nivel " + job.getLevel() + "!");
+                }
             }
         }
     }
