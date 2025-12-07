@@ -56,7 +56,8 @@ public class Job {
     }
 
     public void addXp(double amount) {
-        xp += amount;
+        // Reducimos XP ganado: 40% de lo normal
+        xp += amount * 0.4;
         checkLevelUp();
     }
 
@@ -68,10 +69,11 @@ public class Job {
     }
 
     public double getXpToNextLevel() {
-        return jobType.getBaseXp() * Math.pow(1.1, level - 1);
+        // XP requerido más alto para subir de nivel (progresión más lenta)
+        return jobType.getBaseXp() * Math.pow(1.25, level - 1);
     }
 
     public double applyLevelMultiplier() {
-        return 1 + (level - 1) * 0.05; // +5% por nivel
+        return 1 + (level - 1) * 0.05; // +5% por nivel en dinero
     }
 }

@@ -31,7 +31,7 @@ public class JobEntityKillListener implements Listener {
         for (Job job : jobs) {
             if (job.getJobType() == JobsEnum.ASESINO) {
                 double reward = job.getJobType().getBaseReward();
-                double xpGain = job.getJobType().getBaseXp();
+                double xpGain = job.getJobType().getBaseXp() * 0.4; // XP reducido
                 int oldLevel = job.getLevel();
 
                 job.addBalance(reward);

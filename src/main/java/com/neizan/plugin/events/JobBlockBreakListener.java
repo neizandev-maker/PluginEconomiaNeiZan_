@@ -28,21 +28,17 @@ public class JobBlockBreakListener implements Listener {
         if (jobs.isEmpty()) return;
 
         for (Job job : jobs) {
-            if (job.getJobType() == JobsEnum.EXCAVADOR) {
+            if (job.getJobType() == JobsEnum.EXCAVADOR || job.getJobType() == JobsEnum.MINERO) {
                 double reward = job.getJobType().getBaseReward();
-                double xpGain = job.getJobType().getBaseXp();
+                double xpGain = job.getJobType().getBaseXp() * 0.4; // XP reducido
                 int oldLevel = job.getLevel();
 
                 job.addBalance(reward);
                 job.addXp(xpGain);
 
-                // Guardamos cambios del trabajo inmediatamente
                 jobManager.updateJob(job);
-
-                // Sumar dinero al balance general
                 Main.getInstance().getEconomyManager().addBalance(playerName, reward);
 
-                // Feedback al jugador
                 player.sendMessage("§aHas ganado $" + reward + " y " + xpGain + " XP como " + job.getJobType().getNombre());
                 if (job.getLevel() > oldLevel) {
                     player.sendMessage("§6¡Has subido al nivel " + job.getLevel() + "!");
