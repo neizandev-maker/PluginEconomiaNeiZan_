@@ -6,6 +6,7 @@ public class Job {
 
     private final UUID playerUuid;
     private final JobsEnum jobType;
+
     private double balance;
     private double xp;
     private int level;
@@ -18,9 +19,15 @@ public class Job {
         this.level = 1;
     }
 
+    public UUID getPlayerUuid() {
+        return playerUuid;
+    }
+
     public JobsEnum getJobType() {
         return jobType;
     }
+
+    // ───── DINERO ─────
 
     public double getBalance() {
         return balance;
@@ -34,6 +41,8 @@ public class Job {
         this.balance = balance;
     }
 
+    // ───── XP Y NIVEL ─────
+
     public double getXp() {
         return xp;
     }
@@ -42,9 +51,6 @@ public class Job {
         return level;
     }
 
-    // -----------------------------
-    // NUEVOS MÉTODOS PARA LOAD
-    // -----------------------------
     public void setXp(double xp) {
         this.xp = xp;
     }
@@ -53,15 +59,12 @@ public class Job {
         this.level = level;
     }
 
-    // -----------------------------
-    // Funciones de niveles y XP
-    // -----------------------------
     public void addXp(double amount) {
         xp += amount;
         checkLevelUp();
     }
 
-    public void checkLevelUp() {
+    private void checkLevelUp() {
         while (xp >= getXpToNextLevel() && level < 100) {
             xp -= getXpToNextLevel();
             level++;
