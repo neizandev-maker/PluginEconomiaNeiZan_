@@ -29,7 +29,6 @@ public class RemoveJobCommand implements CommandExecutor {
 
         try {
             JobsEnum jobEnum = JobsEnum.valueOf(args[0].toUpperCase());
-            // Ahora removeJob existe en JobManager
             boolean removed = jobManager.removeJob(player.getName(), jobEnum);
             if (removed) {
                 player.sendMessage("§aHas eliminado el trabajo: " + jobEnum.getNombre());

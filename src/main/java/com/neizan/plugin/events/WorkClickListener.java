@@ -28,7 +28,7 @@ public class WorkClickListener implements Listener {
     public void onClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        String playerName = player.getName(); // Usamos nombre en vez de UUID
+        String playerName = player.getName();
 
         String title = event.getView().getTitle();
         if (!title.equals("§6Selecciona un trabajo") && !title.startsWith("§6Detalles de ")) return;
@@ -37,19 +37,17 @@ public class WorkClickListener implements Listener {
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
-        // Menú principal → abrir submenú
         if (title.equals("§6Selecciona un trabajo")) {
             JobsEnum job = JobsEnum.fromItem(clicked.getType());
             if (job == null) return;
 
             Inventory inv = Bukkit.createInventory(null, 27, "§6Detalles de " + job.getNombre());
 
-            // Info del trabajo
             ItemStack info = new ItemStack(job.getIcon());
             ItemMeta meta = info.getItemMeta();
             meta.setDisplayName("§a" + job.getNombre());
 
-            Job j = jobManager.getJob(playerName, job); // <-- Cambiado a playerName
+            Job j = jobManager.getJob(playerName, job);
             int level = j != null ? j.getLevel() : 1;
             double xp = j != null ? j.getXp() : 0;
             double xpToNext = j != null ? j.getXpToNextLevel() : job.getBaseXp();
@@ -64,7 +62,6 @@ public class WorkClickListener implements Listener {
             info.setItemMeta(meta);
             inv.setItem(13, info);
 
-            // Botones
             ItemStack accept = new ItemStack(Material.GREEN_WOOL);
             ItemMeta am = accept.getItemMeta();
             am.setDisplayName("§aAceptar trabajo");
@@ -81,7 +78,6 @@ public class WorkClickListener implements Listener {
             player.openInventory(inv);
         }
 
-        // Submenú → aceptar/rechazar
         if (title.startsWith("§6Detalles de ")) {
             if (clicked.getType() == Material.GREEN_WOOL) {
                 JobsEnum job = JobsEnum.fromName(title.replace("§6Detalles de ", ""));

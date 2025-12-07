@@ -19,7 +19,6 @@ public class Main extends JavaPlugin {
         instance = this;
         saveDefaultConfig();
 
-        // CONEXIÓN MYSQL
         mySQL = new MySQLManager();
         mySQL.connect("localhost", "jobs", "root", "root");
 

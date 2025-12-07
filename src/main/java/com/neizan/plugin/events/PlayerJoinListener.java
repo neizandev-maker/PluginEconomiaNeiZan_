@@ -18,7 +18,6 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        // Registramos al jugador usando SU NOMBRE
         String playerName = event.getPlayer().getName();
         economy.registerPlayer(playerName);
     }

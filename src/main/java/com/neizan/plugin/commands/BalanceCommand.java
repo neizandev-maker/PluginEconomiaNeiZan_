@@ -16,7 +16,6 @@ public class BalanceCommand implements CommandExecutor {
         }
 
         Player player = (Player) sender;
-        // Se usa getName() en lugar de UUID
         double balance = Main.getInstance().getEconomyManager().getBalance(player.getName());
         player.sendMessage("Tu balance es: $" + balance);
         return true;

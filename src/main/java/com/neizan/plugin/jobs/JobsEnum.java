@@ -45,9 +45,7 @@ public enum JobsEnum {
         return null;
     }
 
-    // ------------------------------
-    // NUEVO MÉTODO
-    // ------------------------------
+
     public String getRewardDescription() {
         switch (this) {
             case EXCAVADOR: return "$" + baseReward + " por DIRT, SAND o GRAVEL";
