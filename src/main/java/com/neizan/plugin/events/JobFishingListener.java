@@ -9,6 +9,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 
+import java.util.UUID;
+
 public class JobFishingListener implements Listener {
 
     private final JobManager jobManager;
@@ -20,16 +22,19 @@ public class JobFishingListener implements Listener {
     @EventHandler
     public void onFish(PlayerFishEvent event) {
         Player player = event.getPlayer();
-        if (!jobManager.hasJob(player.getUniqueId())) return;
+        String playerName = player.getName();
 
-        for (Job job : jobManager.getJobs(player.getUniqueId())) {
+        if (!jobManager.hasJob(playerName)) return;
+
+        for (Job job : jobManager.getJobs(playerName)) {
             if (job.getJobType() != JobsEnum.PESCADOR) continue;
+
             if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
                 double reward = job.getJobType().getBaseReward();
                 double xpGain = job.getJobType().getBaseXp();
                 job.addBalance(reward);
                 job.addXp(xpGain);
-                Main.getInstance().getEconomyManager().addBalance(player.getUniqueId(), reward);
+                Main.getInstance().getEconomyManager().addBalance(UUID.fromString(playerName), reward);
             }
         }
     }

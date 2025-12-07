@@ -1,49 +1,96 @@
 package com.neizan.plugin.jobs;
 
+import com.neizan.plugin.database.MySQLManager;
+
+import java.sql.*;
 import java.util.*;
 
 public class JobManager {
 
-    private final HashMap<UUID, List<Job>> jobs;
+    private final MySQLManager mySQL;
 
-    public JobManager() {
-        this.jobs = new HashMap<>();
+    public JobManager(MySQLManager mySQL) {
+        this.mySQL = mySQL;
     }
 
-    public boolean addJob(UUID playerUUID, JobsEnum jobType) {
-        List<Job> playerJobs = jobs.getOrDefault(playerUUID, new ArrayList<>());
+    public List<Job> getJobs(String playerName) {
+        List<Job> list = new ArrayList<>();
+        try {
+            PreparedStatement ps = mySQL.getConnection().prepareStatement(
+                    "SELECT * FROM player_jobs WHERE player_name=?");
+            ps.setString(1, playerName);
+            ResultSet rs = ps.executeQuery();
 
-        if (playerJobs.size() >= 3) return false; // máximo 3 trabajos
+            while (rs.next()) {
+                JobsEnum type = JobsEnum.valueOf(rs.getString("job"));
+                Job job = new Job(playerName, type);
+                job.setLevel(rs.getInt("level"));
+                job.setXp(rs.getDouble("xp"));
+                job.setBalance(rs.getDouble("balance"));
+                list.add(job);
+            }
 
-        for (Job j : playerJobs) {
-            if (j.getJobType() == jobType) return false; // ya tiene este trabajo
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        Job newJob = new Job(playerUUID, jobType);
-        playerJobs.add(newJob);
-        jobs.put(playerUUID, playerJobs);
-        return true;
+        return list;
     }
 
-    public List<Job> getJobs(UUID playerUUID) {
-        return jobs.getOrDefault(playerUUID, new ArrayList<>());
+    public boolean hasJob(String playerName) {
+        return !getJobs(playerName).isEmpty();
     }
 
-    public boolean hasJob(UUID playerUUID) {
-        return jobs.containsKey(playerUUID) && !jobs.get(playerUUID).isEmpty();
+    public boolean addJob(String playerName, JobsEnum type) {
+        if (getJobs(playerName).size() >= 3) return false;
+
+        try {
+            PreparedStatement ps = mySQL.getConnection().prepareStatement(
+                    "INSERT INTO player_jobs VALUES (?,?,?,?,?)");
+            ps.setString(1, playerName);
+            ps.setString(2, type.name());
+            ps.setInt(3, 1);
+            ps.setDouble(4, 0);
+            ps.setDouble(5, 0);
+            ps.executeUpdate();
+            return true;
+
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
-    public Job getJob(UUID playerUUID, JobsEnum jobType) {
-        for (Job j : getJobs(playerUUID)) {
-            if (j.getJobType() == jobType) return j;
+    public boolean removeJob(String playerName, JobsEnum type) {
+        try {
+            PreparedStatement ps = mySQL.getConnection().prepareStatement(
+                    "DELETE FROM player_jobs WHERE player_name=? AND job=?");
+            ps.setString(1, playerName);
+            ps.setString(2, type.name());
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    public Job getJob(String playerName, JobsEnum type) {
+        for (Job j : getJobs(playerName)) {
+            if (j.getJobType() == type) return j;
         }
         return null;
     }
 
-    public boolean removeJob(UUID playerUUID, JobsEnum jobType) {
-        List<Job> playerJobs = jobs.getOrDefault(playerUUID, new ArrayList<>());
-        boolean removed = playerJobs.removeIf(j -> j.getJobType() == jobType);
-        if (removed) jobs.put(playerUUID, playerJobs);
-        return removed;
+    public void saveJob(Job job) {
+        try {
+            PreparedStatement ps = mySQL.getConnection().prepareStatement(
+                    "REPLACE INTO player_jobs VALUES (?,?,?,?,?)");
+            ps.setString(1, job.getPlayerName());
+            ps.setString(2, job.getJobType().name());
+            ps.setInt(3, job.getLevel());
+            ps.setDouble(4, job.getXp());
+            ps.setDouble(5, job.getBalance());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

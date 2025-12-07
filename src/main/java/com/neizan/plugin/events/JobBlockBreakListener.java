@@ -11,6 +11,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 
+import java.util.UUID;
+
 public class JobBlockBreakListener implements Listener {
 
     private final JobManager jobManager;
@@ -22,9 +24,11 @@ public class JobBlockBreakListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        if (!jobManager.hasJob(player.getUniqueId())) return;
+        String playerName = player.getName();
 
-        for (Job job : jobManager.getJobs(player.getUniqueId())) {
+        if (!jobManager.hasJob(playerName)) return;
+
+        for (Job job : jobManager.getJobs(playerName)) {
             JobsEnum type = job.getJobType();
             double reward = 0;
             double xpGain = 0;
@@ -48,7 +52,7 @@ public class JobBlockBreakListener implements Listener {
             if (reward > 0) {
                 job.addBalance(reward);
                 job.addXp(xpGain);
-                Main.getInstance().getEconomyManager().addBalance(player.getUniqueId(), reward);
+                Main.getInstance().getEconomyManager().addBalance(UUID.fromString(playerName), reward);
             }
         }
     }

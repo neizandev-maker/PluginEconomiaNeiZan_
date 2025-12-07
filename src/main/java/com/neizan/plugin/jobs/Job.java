@@ -1,26 +1,24 @@
 package com.neizan.plugin.jobs;
 
-import java.util.UUID;
-
 public class Job {
 
-    private final UUID playerUuid;
+    private final String playerName;
     private final JobsEnum jobType;
 
     private double balance;
     private double xp;
     private int level;
 
-    public Job(UUID playerUuid, JobsEnum jobType) {
-        this.playerUuid = playerUuid;
+    public Job(String playerName, JobsEnum jobType) {
+        this.playerName = playerName;
         this.jobType = jobType;
         this.balance = 0;
         this.xp = 0;
         this.level = 1;
     }
 
-    public UUID getPlayerUuid() {
-        return playerUuid;
+    public String getPlayerName() {
+        return playerName;
     }
 
     public JobsEnum getJobType() {
@@ -28,7 +26,6 @@ public class Job {
     }
 
     // ───── DINERO ─────
-
     public double getBalance() {
         return balance;
     }
@@ -42,7 +39,6 @@ public class Job {
     }
 
     // ───── XP Y NIVEL ─────
-
     public double getXp() {
         return xp;
     }
@@ -76,6 +72,6 @@ public class Job {
     }
 
     public double applyLevelMultiplier() {
-        return 1 + (level - 1) * 0.05; // +5% por nivel
+        return 1 + (level - 1) * 0.05;
     }
 }

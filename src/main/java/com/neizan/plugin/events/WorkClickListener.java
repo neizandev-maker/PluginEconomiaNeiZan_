@@ -1,6 +1,5 @@
 package com.neizan.plugin.events;
 
-import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import com.neizan.plugin.jobs.JobsEnum;
@@ -29,6 +28,8 @@ public class WorkClickListener implements Listener {
     public void onClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
+        String playerName = player.getName(); // Usamos nombre en vez de UUID
+
         String title = event.getView().getTitle();
         if (!title.equals("§6Selecciona un trabajo") && !title.startsWith("§6Detalles de ")) return;
 
@@ -48,7 +49,7 @@ public class WorkClickListener implements Listener {
             ItemMeta meta = info.getItemMeta();
             meta.setDisplayName("§a" + job.getNombre());
 
-            Job j = jobManager.getJob(player.getUniqueId(), job);
+            Job j = jobManager.getJob(playerName, job); // <-- Cambiado a playerName
             int level = j != null ? j.getLevel() : 1;
             double xp = j != null ? j.getXp() : 0;
             double xpToNext = j != null ? j.getXpToNextLevel() : job.getBaseXp();
@@ -84,7 +85,7 @@ public class WorkClickListener implements Listener {
         if (title.startsWith("§6Detalles de ")) {
             if (clicked.getType() == Material.GREEN_WOOL) {
                 JobsEnum job = JobsEnum.fromName(title.replace("§6Detalles de ", ""));
-                jobManager.addJob(player.getUniqueId(), job);
+                jobManager.addJob(playerName, job); // <-- Cambiado a playerName
                 player.sendMessage("§aHas aceptado el trabajo: " + job.getNombre());
                 player.closeInventory();
             } else if (clicked.getType() == Material.RED_WOOL) {

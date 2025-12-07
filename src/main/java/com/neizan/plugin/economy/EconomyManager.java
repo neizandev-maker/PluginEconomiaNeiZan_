@@ -1,49 +1,61 @@
 package com.neizan.plugin.economy;
 
-import java.util.HashMap;
+import com.neizan.plugin.database.MySQLManager;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 
 public class EconomyManager {
 
-    private final HashMap<UUID, Double> balances;
+    private final MySQLManager mySQL;
 
-    public EconomyManager() {
-        this.balances = new HashMap<>();
+    public EconomyManager(MySQLManager mySQL) {
+        this.mySQL = mySQL;
     }
 
-    // Obtener dinero de un jugador
-    public double getBalance(UUID playerUUID) {
-        return balances.getOrDefault(playerUUID, 0.0);
+    public double getBalance(UUID uuid) {
+        try {
+            PreparedStatement ps = mySQL.getConnection().prepareStatement(
+                    "SELECT balance FROM players WHERE uuid=?");
+            ps.setString(1, uuid.toString());
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) return rs.getDouble("balance");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
-    // Añadir dinero a un jugador
-    public void addBalance(UUID playerUUID, double amount) {
-        balances.put(playerUUID, getBalance(playerUUID) + amount);
-    }
-
-    // Quitar dinero de un jugador
-    public boolean removeBalance(UUID playerUUID, double amount) {
-        double current = getBalance(playerUUID);
-        if (current >= amount) {
-            balances.put(playerUUID, current - amount);
-            return true;
-        } else {
-            return false;
+    public void setBalance(UUID uuid, double amount) {
+        try {
+            PreparedStatement ps = mySQL.getConnection().prepareStatement(
+                    "REPLACE INTO players VALUES (?, ?)");
+            ps.setString(1, uuid.toString());
+            ps.setDouble(2, amount);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    // Registrar jugador
-    public void registerPlayer(UUID playerUUID) {
-        balances.putIfAbsent(playerUUID, 0.0);
+    public void addBalance(UUID uuid, double amount) {
+        setBalance(uuid, getBalance(uuid) + amount);
     }
 
-    // Comprobar si el jugador existe
-    public boolean hasPlayer(UUID playerUUID) {
-        return balances.containsKey(playerUUID);
+    public boolean removeBalance(UUID uuid, double amount) {
+        double current = getBalance(uuid);
+        if (current >= amount) {
+            setBalance(uuid, current - amount);
+            return true;
+        }
+        return false;
     }
 
-    // Establecer balance directamente
-    public void setBalance(UUID playerUUID, double amount) {
-        balances.put(playerUUID, amount);
+    public void registerPlayer(UUID uuid) {
+        setBalance(uuid, getBalance(uuid));
     }
 }

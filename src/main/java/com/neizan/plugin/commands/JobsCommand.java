@@ -24,7 +24,7 @@ public class JobsCommand implements CommandExecutor {
             return true;
         }
 
-        List<Job> jobs = jobManager.getJobs(player.getUniqueId());
+        List<Job> jobs = jobManager.getJobs(player.getName());
         if (jobs.isEmpty()) {
             player.sendMessage("§cNo tienes trabajos.");
             return true;
