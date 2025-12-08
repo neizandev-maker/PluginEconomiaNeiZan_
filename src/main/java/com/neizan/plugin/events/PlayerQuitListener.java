@@ -20,7 +20,7 @@ public class PlayerQuitListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         for (Job job : jobManager.getJobs(player.getName())) {
-            jobManager.updateJob(job); // guarda XP, nivel y balance
+            jobManager.updateJob(job);
         }
     }
 }

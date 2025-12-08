@@ -55,7 +55,6 @@ public class EconomyManager {
     }
 
     public void registerPlayer(String playerName) {
-        // Si el jugador no tiene registro, se crea con balance inicial 0
         setBalance(playerName, getBalance(playerName));
     }
 }
