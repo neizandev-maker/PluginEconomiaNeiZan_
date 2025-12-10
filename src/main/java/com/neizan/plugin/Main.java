@@ -19,13 +19,23 @@ public class Main extends JavaPlugin {
         instance = this;
         saveDefaultConfig();
 
+        // Conexión a MySQL
         mySQL = new MySQLManager();
         mySQL.connect("localhost", "jobs", "root", "root");
 
+        if (mySQL.getConnection() == null) {
+            getLogger().severe("¡Error al conectar a MySQL! Desactivando plugin.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        } else {
+            getLogger().info("Conexión a MySQL correcta.");
+        }
+
+        // Inicializar managers
         economyManager = new EconomyManager(mySQL);
         jobManager = new JobManager(mySQL);
 
-        // Comandos
+        // Registrar comandos
         getCommand("balance").setExecutor(new BalanceCommand());
         getCommand("pay").setExecutor(new PayCommand());
         getCommand("work").setExecutor(new WorkCommand(jobManager));
@@ -34,7 +44,7 @@ public class Main extends JavaPlugin {
         getCommand("removejob").setExecutor(new RemoveJobCommand(jobManager));
         getCommand("jobinfo").setExecutor(new JobInfoCommand(jobManager));
 
-        // Eventos
+        // Registrar eventos
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(economyManager, jobManager), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(jobManager), this);
         getServer().getPluginManager().registerEvents(new JobBlockBreakListener(jobManager), this);
@@ -44,6 +54,12 @@ public class Main extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WorkClickListener(jobManager), this);
 
         getLogger().info("PLUGIN NEIZAN MYSQL ACTIVADO");
+    }
+
+    @Override
+    public void onDisable() {
+        getLogger().info("PLUGIN NEIZAN MYSQL DESACTIVADO");
+        // Aquí podrías guardar jobs si quieres
     }
 
     public static Main getInstance() {
@@ -56,5 +72,9 @@ public class Main extends JavaPlugin {
 
     public JobManager getJobManager() {
         return jobManager;
+    }
+
+    public MySQLManager getMySQL() {
+        return mySQL;
     }
 }

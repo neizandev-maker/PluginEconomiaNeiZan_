@@ -35,52 +35,48 @@ public class WorkCommand implements CommandExecutor {
         int[] jobSlots = {11, 12, 13, 14, 15};
         JobsEnum[] jobs = JobsEnum.values();
 
-        // Panel azul para marco
+        // panel azul
         ItemStack bluePane = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
         ItemMeta paneMeta = bluePane.getItemMeta();
         paneMeta.setDisplayName(" ");
         bluePane.setItemMeta(paneMeta);
 
-        // Colocar marco azul
-        int[] borderSlots = {
-                0, 1, 2, 3, 4, 5, 6, 7, 8,
-                9, 17,
-                18, 19, 20, 21, 22, 23, 24, 25, 26
-        };
+        int[] borderSlots = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
         for (int slot : borderSlots) inv.setItem(slot, bluePane);
-
-        // Paneles adicionales al lado de trabajos (izq/dcha de pala y caña)
         inv.setItem(10, bluePane);
         inv.setItem(16, bluePane);
 
-        // Colocar trabajos
+        // colocar trabajos
         for (int i = 0; i < jobs.length; i++) {
             JobsEnum job = jobs[i];
             ItemStack item = job.getIcon();
             ItemMeta meta = item.getItemMeta();
 
-            // Quitar atributos automáticos de ítems para que no salga daño extra
-            meta.setAttributeModifiers(null);
-
-            // Color por trabajo
-            String colorCode;
+            String color;
             switch (job) {
-                case EXCAVADOR -> colorCode = "§e"; // amarillo
-                case MINERO -> colorCode = "§b"; // aqua
-                case ASESINO -> colorCode = "§4"; // rojo
-                case GRANJERO -> colorCode = "§a"; // verde
-                case PESCADOR -> colorCode = "§d"; // rosa
-                default -> colorCode = "§f"; // blanco
+                case EXCAVADOR -> color = "§e";
+                case MINERO -> color = "§b";
+                case ASESINO -> color = "§4";
+                case GRANJERO -> color = "§a";
+                case PESCADOR -> color = "§d";
+                default -> color = "§f";
             }
 
-            meta.setDisplayName(formatBoldColor(colorCode, job.getNombre()));
+            meta.setDisplayName(formatBoldColor(color, job.getNombre()));
 
-            // Lore simple sin atributos extra
             List<String> lore = new ArrayList<>();
-            lore.add(formatBoldColor("§7", job.getDescripcion()));
-            lore.add("§7Recompensa base: " + formatBoldColor("§a", "$" + job.getBaseReward()));
-            meta.setLore(lore);
+            lore.add("§7" + job.getDescripcion());
+            lore.add("§5Acción: " + capitalize(job.getAction()));
 
+            // ---------- Comprobar si el jugador ya tiene el trabajo ----------
+            if (jobManager.isPlayerInJob(player.getName(), job)) {
+                lore.add("§c¡Ya trabajas aquí!");
+                lore.add("§eHaz clic para salir de este trabajo");
+            } else {
+                lore.add("§aHaz clic derecho para trabajar aquí");
+            }
+
+            meta.setLore(lore);
             item.setItemMeta(meta);
             inv.setItem(jobSlots[i], item);
         }
@@ -91,9 +87,12 @@ public class WorkCommand implements CommandExecutor {
 
     private String formatBoldColor(String colorCode, String text) {
         StringBuilder sb = new StringBuilder();
-        for (char c : text.toCharArray()) {
-            sb.append("§l").append(colorCode).append(c);
-        }
+        for (char c : text.toCharArray()) sb.append("§l").append(colorCode).append(c);
         return sb.toString();
+    }
+
+    private String capitalize(String text) {
+        if (text == null || text.isEmpty()) return text;
+        return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 }

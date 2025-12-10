@@ -3,12 +3,13 @@ package com.neizan.plugin.jobs;
 import com.neizan.plugin.database.MySQLManager;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class JobManager {
 
     private final MySQLManager mySQL;
+    // Map de jugador -> (JobType -> Job)
+    private final Map<String, Map<JobsEnum, Job>> jobsMap = new HashMap<>();
 
     public JobManager(MySQLManager mySQL) {
         this.mySQL = mySQL;
@@ -30,6 +31,7 @@ public class JobManager {
         }
     }
 
+    // Obtener todos los trabajos del jugador
     public List<Job> getJobs(String playerName) {
         List<Job> jobs = new ArrayList<>();
         try (PreparedStatement ps = mySQL.getConnection().prepareStatement(
@@ -38,16 +40,13 @@ public class JobManager {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 JobsEnum type = JobsEnum.valueOf(rs.getString("jobName"));
-                int level = rs.getInt("level");
-                double xp = rs.getDouble("xp");
-                double balance = rs.getDouble("balance");
-
                 Job job = new Job(playerName, type);
-                job.setLevel(level);
-                job.setXp(xp);
-                job.setBalance(balance);
+                job.setLevel(rs.getInt("level"));
+                job.setXp(rs.getDouble("xp"));
+                job.setBalance(rs.getDouble("balance"));
 
                 jobs.add(job);
+                jobsMap.computeIfAbsent(playerName, k -> new HashMap<>()).put(type, job);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -55,22 +54,29 @@ public class JobManager {
         return jobs;
     }
 
+    public boolean isPlayerInJob(String playerName, JobsEnum job) {
+        Map<JobsEnum, Job> playerJobs = jobsMap.get(playerName);
+        return playerJobs != null && playerJobs.containsKey(job);
+    }
+
     public Job getJob(String playerName, JobsEnum jobType) {
+        Map<JobsEnum, Job> playerJobs = jobsMap.get(playerName);
+        if (playerJobs != null && playerJobs.containsKey(jobType)) {
+            return playerJobs.get(jobType);
+        }
+
         try (PreparedStatement ps = mySQL.getConnection().prepareStatement(
                 "SELECT * FROM players WHERE playerName=? AND jobName=?")) {
             ps.setString(1, playerName);
             ps.setString(2, jobType.name());
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                int level = rs.getInt("level");
-                double xp = rs.getDouble("xp");
-                double balance = rs.getDouble("balance");
-
                 Job job = new Job(playerName, jobType);
-                job.setLevel(level);
-                job.setXp(xp);
-                job.setBalance(balance);
+                job.setLevel(rs.getInt("level"));
+                job.setXp(rs.getDouble("xp"));
+                job.setBalance(rs.getDouble("balance"));
 
+                jobsMap.computeIfAbsent(playerName, k -> new HashMap<>()).put(jobType, job);
                 return job;
             }
         } catch (SQLException e) {
@@ -80,15 +86,19 @@ public class JobManager {
     }
 
     public void addJob(String playerName, JobsEnum jobType) {
-        if (getJob(playerName, jobType) != null) return; // ya tiene el trabajo
+        if (getJob(playerName, jobType) != null) return;
+
         try (PreparedStatement ps = mySQL.getConnection().prepareStatement(
                 "INSERT INTO players (playerName, jobName, level, xp, balance) VALUES (?, ?, ?, ?, ?)")) {
             ps.setString(1, playerName);
             ps.setString(2, jobType.name());
-            ps.setInt(3, 1);     // nivel inicial
-            ps.setDouble(4, 0);  // xp inicial
-            ps.setDouble(5, 0);  // balance inicial
+            ps.setInt(3, 1);
+            ps.setDouble(4, 0);
+            ps.setDouble(5, 0);
             ps.executeUpdate();
+
+            Job job = new Job(playerName, jobType);
+            jobsMap.computeIfAbsent(playerName, k -> new HashMap<>()).put(jobType, job);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -99,7 +109,15 @@ public class JobManager {
                 "DELETE FROM players WHERE playerName=? AND jobName=?")) {
             ps.setString(1, playerName);
             ps.setString(2, jobType.name());
-            return ps.executeUpdate() > 0;
+            boolean removed = ps.executeUpdate() > 0;
+
+            Map<JobsEnum, Job> playerJobs = jobsMap.get(playerName);
+            if (playerJobs != null) {
+                playerJobs.remove(jobType);
+                if (playerJobs.isEmpty()) jobsMap.remove(playerName);
+            }
+
+            return removed;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -109,8 +127,6 @@ public class JobManager {
     public void saveJob(Job job) {
         updateJob(job);
     }
-
-
 
     public void updateJob(Job job) {
         try (PreparedStatement ps = mySQL.getConnection().prepareStatement(

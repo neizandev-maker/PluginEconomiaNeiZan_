@@ -17,51 +17,21 @@ public class Job {
         this.level = 1;
     }
 
-    public String getPlayerName() {
-        return playerName;
-    }
+    public String getPlayerName() { return playerName; }
+    public JobsEnum getJobType() { return jobType; }
 
-    public JobsEnum getJobType() {
-        return jobType;
-    }
+    public double getBalance() { return balance; }
+    public void addBalance(double amount) { balance += amount * applyLevelMultiplier(); }
+    public void setBalance(double balance) { this.balance = balance; }
 
-    // ───── DINERO ─────
-    public double getBalance() {
-        return balance;
-    }
-
-    public void addBalance(double amount) {
-        balance += amount * applyLevelMultiplier();
-    }
-
-    public void setBalance(double balance) {
-        this.balance = balance;
-    }
-
-    // ───── XP Y NIVEL ─────
-    public double getXp() {
-        return xp;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public void setXp(double xp) {
-        this.xp = xp;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
-    }
-
-    public void addXp(double amount) {
-        xp += amount * 0.4;
-        checkLevelUp();
-    }
+    public double getXp() { return xp; }
+    public int getLevel() { return level; }
+    public void setXp(double xp) { this.xp = xp; }
+    public void setLevel(int level) { this.level = level; }
+    public void addXp(double amount) { xp += amount * 0.4; checkLevelUp(); }
 
     private void checkLevelUp() {
-        while (xp >= getXpToNextLevel() && level < 100) {
+        while(xp >= getXpToNextLevel() && level < 100){
             xp -= getXpToNextLevel();
             level++;
         }
