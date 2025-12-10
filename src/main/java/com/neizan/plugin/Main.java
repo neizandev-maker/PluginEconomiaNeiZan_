@@ -43,6 +43,8 @@ public class Main extends JavaPlugin {
         getCommand("jobs").setExecutor(new JobsCommand(jobManager));
         getCommand("removejob").setExecutor(new RemoveJobCommand(jobManager));
         getCommand("jobinfo").setExecutor(new JobInfoCommand(jobManager));
+        getCommand("jobs").setExecutor(new JobsRootCommand(jobManager, mySQL.getConnection()));
+
 
         // Registrar eventos
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(economyManager, jobManager), this);

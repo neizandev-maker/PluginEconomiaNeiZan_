@@ -31,6 +31,7 @@ public class WorkClickListener implements Listener {
         String playerName = player.getName();
         String title = event.getView().getTitle();
         event.setCancelled(true);
+
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
@@ -56,30 +57,38 @@ public class WorkClickListener implements Listener {
 
             if (clicked.getType() == Material.YELLOW_WOOL) {
                 openQuitJobMenu(player, job);
+
             } else if (clicked.getType() == Material.GREEN_WOOL) {
                 jobManager.addJob(playerName, job);
                 player.sendMessage("§aHas comenzado a trabajar como " + job.getNombre());
                 player.closeInventory();
+
             } else if (clicked.getType() == Material.RED_WOOL) {
+                // LA ROJA HACE DE "VOLVER"
                 player.closeInventory();
             }
         }
 
         // -------------------- MENÚ SALIR --------------------
         if (ChatColor.stripColor(title).startsWith("Salir del trabajo")) {
-            JobsEnum job = JobsEnum.fromName(ChatColor.stripColor(title).replace("Salir del trabajo: ", "").trim());
+            JobsEnum job = JobsEnum.fromName(
+                    ChatColor.stripColor(title).replace("Salir del trabajo: ", "").trim()
+            );
             if (job == null) return;
 
             if (clicked.getType() == Material.GREEN_WOOL) {
                 jobManager.removeJob(playerName, job);
                 player.sendMessage("§aHas salido del trabajo: " + job.getNombre());
                 player.performCommand("work"); // vuelve al menú principal
+
             } else if (clicked.getType() == Material.RED_WOOL) {
-                player.performCommand("work"); // vuelve al menú principal
+                // VOLVER DIRECTO AL MENÚ DE TRABAJOS
+                player.performCommand("work");
             }
         }
     }
 
+    // ===================== MENÚ DE DETALLES =====================
     private void openJobDetailsMenu(Player player, JobsEnum job, boolean alreadyInJob) {
         Job j = jobManager.getJob(player.getName(), job);
         int level = j != null ? j.getLevel() : 1;
@@ -88,6 +97,10 @@ public class WorkClickListener implements Listener {
 
         Inventory inv = Bukkit.createInventory(null, 27, "§l§1Detalles de §l§1" + job.getNombre());
 
+        // Paneles azules
+        addBluePanes(inv);
+
+        // Icono central con info
         ItemStack info = new ItemStack(job.getIconMaterial());
         ItemMeta meta = info.getItemMeta();
 
@@ -100,6 +113,7 @@ public class WorkClickListener implements Listener {
             case PESCADOR -> color = "§d";
             default -> color = "§f";
         }
+
         meta.setDisplayName(formatBoldColor(color, job.getNombre()));
 
         List<String> lore = new ArrayList<>();
@@ -113,15 +127,15 @@ public class WorkClickListener implements Listener {
             lore.add("§c¡Ya trabajas aquí!");
             lore.add("§eHaz clic en el botón para salir de este trabajo");
         } else {
-            lore.add("§aHaz clic derecho para trabajar aquí");
+            lore.add("§aHaz clic para trabajar aquí");
         }
 
         meta.setLore(lore);
         info.setItemMeta(meta);
-        inv.setItem(13, info); // icono central con info
 
-        addBluePanes(inv);
+        inv.setItem(13, info); // Icono central
 
+        // Botones
         if (!alreadyInJob) {
             inv.setItem(11, createButton(Material.GREEN_WOOL, "§aAceptar trabajo"));
             inv.setItem(15, createButton(Material.RED_WOOL, "§cRechazar trabajo"));
@@ -129,29 +143,77 @@ public class WorkClickListener implements Listener {
             inv.setItem(11, createButton(Material.YELLOW_WOOL, "§eSalir del trabajo"));
         }
 
-        inv.setItem(18, createButton(Material.BLUE_STAINED_GLASS_PANE, " ")); // panel azul abajo a la izquierda
+        // Panel azul abajo a la izquierda
+        inv.setItem(18, createButton(Material.BLUE_STAINED_GLASS_PANE, " "));
+
         player.openInventory(inv);
     }
 
+    // ===================== MENÚ SALIR =====================
     private void openQuitJobMenu(Player player, JobsEnum job) {
         Inventory inv = Bukkit.createInventory(null, 27, "§l§1Salir del trabajo: " + job.getNombre());
 
+        // Paneles azules
+        addBluePanes(inv);
+
+        // Icono central con info del trabajo
+        Job j = jobManager.getJob(player.getName(), job);
+        int level = j != null ? j.getLevel() : 1;
+        double xp = j != null ? j.getXp() : 0;
+        double xpToNext = j != null ? j.getXpToNextLevel() : job.getBaseXp();
+
+        ItemStack info = new ItemStack(job.getIconMaterial());
+        ItemMeta meta = info.getItemMeta();
+
+        String color;
+        switch (job) {
+            case EXCAVADOR -> color = "§e";
+            case MINERO -> color = "§b";
+            case ASESINO -> color = "§4";
+            case GRANJERO -> color = "§a";
+            case PESCADOR -> color = "§d";
+            default -> color = "§f";
+        }
+
+        meta.setDisplayName(formatBoldColor(color, job.getNombre()));
+
+        List<String> lore = new ArrayList<>();
+        lore.add("§7" + job.getDescripcion());
+        lore.add("§7Nivel: §e§l" + level);
+        lore.add("§7XP: " + buildXpBar(xp, xpToNext) + " §f§l(" + (int) xp + "/" + (int) xpToNext + ")");
+        lore.add("§7Recompensas: §a§l" + job.getRewardDescription());
+        lore.add("§5Acción: " + capitalize(job.getAction()));
+
+        meta.setLore(lore);
+        info.setItemMeta(meta);
+
+        inv.setItem(13, info); // icono central
         inv.setItem(11, createButton(Material.GREEN_WOOL, "§aSí, salir del trabajo"));
         inv.setItem(15, createButton(Material.RED_WOOL, "§cNo, volver al menú principal"));
-        inv.setItem(13, createButton(Material.BLUE_STAINED_GLASS_PANE, " ")); // panel azul central
-        inv.setItem(18, createButton(Material.BLUE_STAINED_GLASS_PANE, " ")); // panel azul abajo a la izquierda
 
-        addBluePanes(inv);
+        // Paneles azules especiales
+        inv.setItem(18, createButton(Material.BLUE_STAINED_GLASS_PANE, " ")); // abajo izquierda
+        inv.setItem(12, createButton(Material.BLUE_STAINED_GLASS_PANE, " ")); // extra para simetría
+
         player.openInventory(inv);
     }
 
+    // ===================== UTILIDADES =====================
     private void addBluePanes(Inventory inv) {
         ItemStack bluePane = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
         ItemMeta paneMeta = bluePane.getItemMeta();
         paneMeta.setDisplayName(" ");
         bluePane.setItemMeta(paneMeta);
-        int[] borderSlots = {0,1,2,3,4,5,6,7,8,9,10,12,14,16,17,19,20,21,22,23,24,25,26};
-        for (int slot : borderSlots) inv.setItem(slot, bluePane);
+
+        int[] borderSlots = {
+                0, 1, 2, 3, 4, 5, 6, 7, 8,
+                9, 10, 12, 14, 16, 17,
+                19, 20, 21, 22, 23, 24, 25, 26
+        };
+
+        for (int slot : borderSlots) {
+            inv.setItem(slot, bluePane);
+        }
     }
 
     private ItemStack createButton(Material material, String name) {
@@ -164,7 +226,9 @@ public class WorkClickListener implements Listener {
 
     private String formatBoldColor(String colorCode, String text) {
         StringBuilder sb = new StringBuilder();
-        for (char c : text.toCharArray()) sb.append("§l").append(colorCode).append(c);
+        for (char c : text.toCharArray()) {
+            sb.append("§l").append(colorCode).append(c);
+        }
         return sb.toString();
     }
 
