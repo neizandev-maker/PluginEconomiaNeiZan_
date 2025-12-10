@@ -4,6 +4,7 @@ import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import com.neizan.plugin.jobs.JobsEnum;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,23 +30,28 @@ public class WorkClickListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
         String playerName = player.getName();
-
         String title = event.getView().getTitle();
-        if (!title.equals("§6Selecciona un trabajo") && !title.startsWith("§6Detalles de ")) return;
+        if (!ChatColor.stripColor(title).equalsIgnoreCase("Selecciona un trabajo") &&
+                !ChatColor.stripColor(title).startsWith("Detalles de ")) return;
 
         event.setCancelled(true);
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
-        if (title.equals("§6Selecciona un trabajo")) {
+        // Menú "Selecciona un trabajo"
+        if (ChatColor.stripColor(title).equalsIgnoreCase("Selecciona un trabajo")) {
             JobsEnum job = JobsEnum.fromItem(clicked.getType());
             if (job == null) return;
 
-            Inventory inv = Bukkit.createInventory(null, 27, "§6Detalles de " + job.getNombre());
+            // Inventario de detalles del trabajo
+            Inventory inv = Bukkit.createInventory(null, 27,
+                    "§l§1Detalles de §l§1" + job.getNombre());
 
+            // Item principal con información del trabajo
             ItemStack info = new ItemStack(job.getIcon());
             ItemMeta meta = info.getItemMeta();
-            meta.setDisplayName("§a" + job.getNombre());
+            meta.setAttributeModifiers(null); // quitar atributos automáticos
+            meta.setDisplayName(formatBoldColor("§a", job.getNombre()));
 
             Job j = jobManager.getJob(playerName, job);
             int level = j != null ? j.getLevel() : 1;
@@ -53,36 +59,54 @@ public class WorkClickListener implements Listener {
             double xpToNext = j != null ? j.getXpToNextLevel() : job.getBaseXp();
 
             List<String> lore = new ArrayList<>();
-            lore.add("§7" + job.getDescripcion());
-            lore.add("§7Nivel: §e" + level);
-            lore.add("§7XP: " + buildXpBar(xp, xpToNext) + " §f(" + (int) xp + "/" + (int) xpToNext + ")");
-            lore.add("§7Recompensas: " + job.getRewardDescription());
+            lore.add(formatBoldColor("§7", job.getDescripcion()));
+            lore.add("§7Nivel: " + formatBoldColor("§e", String.valueOf(level)));
+            lore.add("§7XP: " + buildXpBar(xp, xpToNext) + " " + formatBoldColor("§f", (int) xp + "/" + (int) xpToNext));
+            lore.add("§7Recompensas: " + formatBoldColor("§a", job.getRewardDescription()));
 
             meta.setLore(lore);
             info.setItemMeta(meta);
             inv.setItem(13, info);
 
+            // Botones de aceptar/rechazar
             ItemStack accept = new ItemStack(Material.GREEN_WOOL);
             ItemMeta am = accept.getItemMeta();
-            am.setDisplayName("§aAceptar trabajo");
+            am.setAttributeModifiers(null); // quitar atributos
+            am.setDisplayName(formatBoldColor("§a", "Aceptar trabajo"));
             accept.setItemMeta(am);
 
             ItemStack decline = new ItemStack(Material.RED_WOOL);
             ItemMeta dm = decline.getItemMeta();
-            dm.setDisplayName("§cRechazar trabajo");
+            dm.setAttributeModifiers(null);
+            dm.setDisplayName(formatBoldColor("§c", "Rechazar trabajo"));
             decline.setItemMeta(dm);
 
+            // Paneles azules alrededor
+            ItemStack bluePane = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
+            ItemMeta paneMeta = bluePane.getItemMeta();
+            paneMeta.setDisplayName(" ");
+            bluePane.setItemMeta(paneMeta);
+
+            int[] borderSlots = {
+                    0, 1, 2, 3, 4, 5, 6, 7, 8,
+                    9, 11, 15, 17,
+                    18, 19, 20, 21, 22, 23, 24, 25, 26
+            };
+            for (int slot : borderSlots) inv.setItem(slot, bluePane);
+
+            // Colocar botones
             inv.setItem(11, accept);
             inv.setItem(15, decline);
 
             player.openInventory(inv);
         }
 
-        if (title.startsWith("§6Detalles de ")) {
+        // Menú "Detalles de <trabajo>"
+        if (title.startsWith("§l§1Detalles de §l§1")) {
             if (clicked.getType() == Material.GREEN_WOOL) {
-                JobsEnum job = JobsEnum.fromName(title.replace("§6Detalles de ", ""));
-                jobManager.addJob(playerName, job); // <-- Cambiado a playerName
-                player.sendMessage("§aHas aceptado el trabajo: " + job.getNombre());
+                JobsEnum job = JobsEnum.fromName(ChatColor.stripColor(title).replace("Detalles de ", ""));
+                jobManager.addJob(playerName, job);
+                player.sendMessage(formatBoldColor("§a", "Has aceptado el trabajo: " + job.getNombre()));
                 player.closeInventory();
             } else if (clicked.getType() == Material.RED_WOOL) {
                 player.closeInventory();
@@ -99,5 +123,13 @@ public class WorkClickListener implements Listener {
             else bar.append("§7░");
         }
         return bar.toString();
+    }
+
+    private String formatBoldColor(String colorCode, String text) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            sb.append("§l").append(colorCode).append(c);
+        }
+        return sb.toString();
     }
 }
