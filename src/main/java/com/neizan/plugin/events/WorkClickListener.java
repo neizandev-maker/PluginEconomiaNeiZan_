@@ -28,12 +28,19 @@ public class WorkClickListener implements Listener {
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
-        String playerName = player.getName();
-        String title = event.getView().getTitle();
-        event.setCancelled(true);
 
+        String title = event.getView().getTitle();
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
+
+        // Cancelar solo si es inventario de plugin
+        if (title.contains("Selecciona un Trabajo") || title.contains("Detalles de ") || title.contains("Salir del trabajo")) {
+            event.setCancelled(true);
+        } else {
+            return; // permitir usar inventario normal
+        }
+
+        String playerName = player.getName();
 
         // -------------------- MENÚ PRINCIPAL --------------------
         if (ChatColor.stripColor(title).equalsIgnoreCase("Selecciona un Trabajo")) {
@@ -44,10 +51,9 @@ public class WorkClickListener implements Listener {
 
             if (alreadyInJob) {
                 openQuitJobMenu(player, job);
-                return;
+            } else {
+                openJobDetailsMenu(player, job, false);
             }
-
-            openJobDetailsMenu(player, job, false);
         }
 
         // -------------------- MENÚ DETALLES --------------------
@@ -64,16 +70,17 @@ public class WorkClickListener implements Listener {
                 player.closeInventory();
 
             } else if (clicked.getType() == Material.RED_WOOL) {
-                // LA ROJA HACE DE "VOLVER"
-                player.closeInventory();
+                // Volver al menú principal
+                player.performCommand("work");
+
+            } else if (clicked.getType() == Material.ARROW) {
+                player.performCommand("work"); // Flecha vuelve al menú principal
             }
         }
 
         // -------------------- MENÚ SALIR --------------------
         if (ChatColor.stripColor(title).startsWith("Salir del trabajo")) {
-            JobsEnum job = JobsEnum.fromName(
-                    ChatColor.stripColor(title).replace("Salir del trabajo: ", "").trim()
-            );
+            JobsEnum job = JobsEnum.fromName(ChatColor.stripColor(title).replace("Salir del trabajo: ", "").trim());
             if (job == null) return;
 
             if (clicked.getType() == Material.GREEN_WOOL) {
@@ -82,13 +89,16 @@ public class WorkClickListener implements Listener {
                 player.performCommand("work"); // vuelve al menú principal
 
             } else if (clicked.getType() == Material.RED_WOOL) {
-                // VOLVER DIRECTO AL MENÚ DE TRABAJOS
+                // Volver al menú principal
                 player.performCommand("work");
+
+            } else if (clicked.getType() == Material.ARROW) {
+                player.performCommand("work"); // Flecha vuelve al menú principal
             }
         }
     }
 
-    // ===================== MENÚ DE DETALLES =====================
+    // ===================== MENÚ DETALLES =====================
     private void openJobDetailsMenu(Player player, JobsEnum job, boolean alreadyInJob) {
         Job j = jobManager.getJob(player.getName(), job);
         int level = j != null ? j.getLevel() : 1;
@@ -97,10 +107,8 @@ public class WorkClickListener implements Listener {
 
         Inventory inv = Bukkit.createInventory(null, 27, "§l§1Detalles de §l§1" + job.getNombre());
 
-        // Paneles azules
         addBluePanes(inv);
 
-        // Icono central con info
         ItemStack info = new ItemStack(job.getIconMaterial());
         ItemMeta meta = info.getItemMeta();
 
@@ -115,7 +123,6 @@ public class WorkClickListener implements Listener {
         }
 
         meta.setDisplayName(formatBoldColor(color, job.getNombre()));
-
         List<String> lore = new ArrayList<>();
         lore.add("§7" + job.getDescripcion());
         lore.add("§7Nivel: §e§l" + level);
@@ -132,10 +139,8 @@ public class WorkClickListener implements Listener {
 
         meta.setLore(lore);
         info.setItemMeta(meta);
+        inv.setItem(13, info);
 
-        inv.setItem(13, info); // Icono central
-
-        // Botones
         if (!alreadyInJob) {
             inv.setItem(11, createButton(Material.GREEN_WOOL, "§aAceptar trabajo"));
             inv.setItem(15, createButton(Material.RED_WOOL, "§cRechazar trabajo"));
@@ -143,8 +148,8 @@ public class WorkClickListener implements Listener {
             inv.setItem(11, createButton(Material.YELLOW_WOOL, "§eSalir del trabajo"));
         }
 
-        // Panel azul abajo a la izquierda
-        inv.setItem(18, createButton(Material.BLUE_STAINED_GLASS_PANE, " "));
+        // Flecha de volver
+        inv.setItem(18, createButton(Material.ARROW, "§cVolver"));
 
         player.openInventory(inv);
     }
@@ -153,10 +158,8 @@ public class WorkClickListener implements Listener {
     private void openQuitJobMenu(Player player, JobsEnum job) {
         Inventory inv = Bukkit.createInventory(null, 27, "§l§1Salir del trabajo: " + job.getNombre());
 
-        // Paneles azules
         addBluePanes(inv);
 
-        // Icono central con info del trabajo
         Job j = jobManager.getJob(player.getName(), job);
         int level = j != null ? j.getLevel() : 1;
         double xp = j != null ? j.getXp() : 0;
@@ -176,7 +179,6 @@ public class WorkClickListener implements Listener {
         }
 
         meta.setDisplayName(formatBoldColor(color, job.getNombre()));
-
         List<String> lore = new ArrayList<>();
         lore.add("§7" + job.getDescripcion());
         lore.add("§7Nivel: §e§l" + level);
@@ -187,13 +189,10 @@ public class WorkClickListener implements Listener {
         meta.setLore(lore);
         info.setItemMeta(meta);
 
-        inv.setItem(13, info); // icono central
+        inv.setItem(13, info);
         inv.setItem(11, createButton(Material.GREEN_WOOL, "§aSí, salir del trabajo"));
         inv.setItem(15, createButton(Material.RED_WOOL, "§cNo, volver al menú principal"));
-
-        // Paneles azules especiales
-        inv.setItem(18, createButton(Material.BLUE_STAINED_GLASS_PANE, " ")); // abajo izquierda
-        inv.setItem(12, createButton(Material.BLUE_STAINED_GLASS_PANE, " ")); // extra para simetría
+        inv.setItem(18, createButton(Material.ARROW, "§cVolver"));
 
         player.openInventory(inv);
     }
@@ -211,9 +210,7 @@ public class WorkClickListener implements Listener {
                 19, 20, 21, 22, 23, 24, 25, 26
         };
 
-        for (int slot : borderSlots) {
-            inv.setItem(slot, bluePane);
-        }
+        for (int slot : borderSlots) inv.setItem(slot, bluePane);
     }
 
     private ItemStack createButton(Material material, String name) {
@@ -226,9 +223,7 @@ public class WorkClickListener implements Listener {
 
     private String formatBoldColor(String colorCode, String text) {
         StringBuilder sb = new StringBuilder();
-        for (char c : text.toCharArray()) {
-            sb.append("§l").append(colorCode).append(c);
-        }
+        for (char c : text.toCharArray()) sb.append("§l").append(colorCode).append(c);
         return sb.toString();
     }
 
