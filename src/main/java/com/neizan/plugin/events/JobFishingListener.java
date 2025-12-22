@@ -29,8 +29,8 @@ public class JobFishingListener implements Listener {
 
         for (Job job : jobs) {
             if (job.getJobType() == JobsEnum.PESCADOR) {
-                double reward = job.getJobType().getBaseReward();
-                double xpGain = job.getJobType().getBaseXp() * 0.4; // XP reducido
+                double reward = job.getJobType().getBaseReward() * 0.35;
+                double xpGain = job.getJobType().getBaseXp() * 0.18; // XP reducido para progresión más lenta
                 int oldLevel = job.getLevel();
 
                 job.addBalance(reward);
