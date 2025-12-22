@@ -45,7 +45,6 @@ public class Main extends JavaPlugin {
         getCommand("jobinfo").setExecutor(new JobInfoCommand(jobManager));
         getCommand("jobs").setExecutor(new JobsRootCommand(jobManager, mySQL.getConnection()));
 
-
         // Registrar eventos
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(economyManager, jobManager), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(jobManager), this);
@@ -53,6 +52,7 @@ public class Main extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JobEntityKillListener(jobManager), this);
         getServer().getPluginManager().registerEvents(new JobHarvestListener(jobManager), this);
         getServer().getPluginManager().registerEvents(new JobFishingListener(jobManager), this);
+        getServer().getPluginManager().registerEvents(new JobBlockPlaceListener(), this);
         getServer().getPluginManager().registerEvents(new WorkClickListener(jobManager), this);
 
         getLogger().info("PLUGIN NEIZAN MYSQL ACTIVADO");

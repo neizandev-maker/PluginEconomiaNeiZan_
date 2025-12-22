@@ -1,6 +1,5 @@
 package com.neizan.plugin.events;
 
-import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import org.bukkit.event.EventHandler;

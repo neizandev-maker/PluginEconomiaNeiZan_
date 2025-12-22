@@ -1,9 +1,10 @@
 package com.neizan.plugin.events;
 
-import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import com.neizan.plugin.jobs.JobsEnum;
+import com.neizan.plugin.jobs.JobRewardService;
+import com.neizan.plugin.jobs.RewardEntry;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,26 +25,18 @@ public class JobEntityKillListener implements Listener {
         Player killer = event.getEntity().getKiller();
         if (killer == null) return;
 
-        String playerName = killer.getName();
-        List<Job> jobs = jobManager.getJobs(playerName);
+        List<Job> jobs = jobManager.getJobs(killer.getName());
         if (jobs.isEmpty()) return;
 
         for (Job job : jobs) {
             if (job.getJobType() == JobsEnum.ASESINO) {
-                double reward = job.getJobType().getBaseReward() * 0.35;
-                double xpGain = job.getJobType().getBaseXp() * 0.18; // XP reducido para progresión más lenta
-                int oldLevel = job.getLevel();
+                RewardEntry rewardEntry = JobRewardService.findKillReward(event.getEntity().getType()).orElse(null);
+                if (rewardEntry == null) continue;
 
-                job.addBalance(reward);
-                job.addXp(xpGain);
-                jobManager.updateJob(job);
+                double reward = rewardEntry.getPay();
+                double xpBase = JobRewardService.calculateScaledXp(job.getJobType(), reward);
 
-                Main.getInstance().getEconomyManager().addBalance(playerName, reward);
-
-                killer.sendMessage("§aHas ganado $" + reward + " y " + xpGain + " XP como " + job.getJobType().getNombre());
-                if (job.getLevel() > oldLevel) {
-                    killer.sendMessage("§6¡Has subido al nivel " + job.getLevel() + "!");
-                }
+                JobRewardService.grantReward(killer, job, jobManager, reward, xpBase, "por matar " + rewardEntry.getTitle());
             }
         }
     }

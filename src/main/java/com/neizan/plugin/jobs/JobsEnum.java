@@ -282,6 +282,9 @@ public enum JobsEnum {
                     new RewardEntry("Ghast", Material.GHAST_TEAR, 2.40, List.of("Nether")),
                     new RewardEntry("Phantom", Material.PHANTOM_MEMBRANE, 2.40, List.of("No dormir")),
                     new RewardEntry("Vex", Material.IRON_SWORD, 2.80, List.of("Invocación")),
+                    new RewardEntry("Pillager", Material.CROSSBOW, 2.20, List.of("Patrulla/Pillager Outpost")),
+                    new RewardEntry("Ravager", Material.SADDLE, 3.20, List.of("Raid")),
+                    new RewardEntry("Vindicator", Material.IRON_AXE, 2.60, List.of("Mansión/Raid")),
                     new RewardEntry("Warden", Material.SCULK_CATALYST, 6.50, List.of("Deep Dark"))
             );
 

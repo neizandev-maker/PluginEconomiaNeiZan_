@@ -1,9 +1,11 @@
 package com.neizan.plugin.events;
 
-import com.neizan.plugin.Main;
 import com.neizan.plugin.jobs.Job;
 import com.neizan.plugin.jobs.JobManager;
 import com.neizan.plugin.jobs.JobsEnum;
+import com.neizan.plugin.jobs.JobRewardService;
+import com.neizan.plugin.jobs.RewardEntry;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,27 +24,24 @@ public class JobBlockBreakListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        String playerName = player.getName();
 
-        List<Job> jobs = jobManager.getJobs(playerName);
+        List<Job> jobs = jobManager.getJobs(player.getName());
         if (jobs.isEmpty()) return;
 
         for (Job job : jobs) {
             if (job.getJobType() == JobsEnum.EXCAVADOR || job.getJobType() == JobsEnum.MINERO) {
-                double reward = job.getJobType().getBaseReward() * 0.35;
-                double xpGain = job.getJobType().getBaseXp() * 0.18; // XP reducido para progresión más lenta
-                int oldLevel = job.getLevel();
+                Block block = event.getBlock();
+                if (block.hasMetadata(JobRewardService.PLACED_METADATA)) continue; // Anti-exploit: bloques colocados por jugadores
 
-                job.addBalance(reward);
-                job.addXp(xpGain);
+                RewardEntry rewardEntry = JobRewardService.findBlockReward(job.getJobType(), block.getType()).orElse(null);
+                if (rewardEntry == null) continue;
 
-                jobManager.updateJob(job);
-                Main.getInstance().getEconomyManager().addBalance(playerName, reward);
+                double reward = rewardEntry.getPay();
+                double xpBase = JobRewardService.calculateScaledXp(job.getJobType(), reward);
 
-                player.sendMessage("§aHas ganado $" + reward + " y " + xpGain + " XP como " + job.getJobType().getNombre());
-                if (job.getLevel() > oldLevel) {
-                    player.sendMessage("§6¡Has subido al nivel " + job.getLevel() + "!");
-                }
+                JobRewardService.grantReward(player, job, jobManager, reward, xpBase, "por romper " + rewardEntry.getTitle());
+
+                block.removeMetadata(JobRewardService.PLACED_METADATA, JobRewardService.getPlugin());
             }
         }
     }
